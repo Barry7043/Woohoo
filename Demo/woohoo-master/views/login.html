@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 15px;">
+
+<head>
+  <meta charset="utf-8">
+  <title>Login</title>
+  <link rel="stylesheet" type="text/css" href="../css/login.css" />
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <div class="login_page">
+    <div class="logo_part">
+      <a href="index.html">
+        <img class="logo" src="../image/logo.png" />
+      </a>
+    </div>
+    <h1 dir="auto" role="heading" class="login_title">
+      <span>Login</span>
+    </h1>
+
+    <!-- changed action to /login -->
+    <form novalidate class="information" method="post">
+      <div class="username_box">
+        <div class="username_box2" dir="auto">
+          <div>
+            <span class="username_title">Username</span>
+          </div>
+          <div dir="auto">
+            <!-- changed name from "session[username_or_email]" to email -->
+            <input name="username" id="username" type="text" dir="auto" class="input_username">
+          </div>
+        </div>
+      </div>
+      <div class="password_box">
+        <div class="password_box2" dir="auto">
+          <div>
+            <span class="password_title">Passward</span>
+          </div>
+          <div dir="auto">
+            <!-- changed name from "session[password]" to password -->
+            <input name="password" id="password" type="password" dir="auto" class="input_password">
+          </div>
+        </div>
+      </div>
+      <div role="button" class="button_box" data-testid="LoginForm_Login_Button">
+        <div dir="auto" class="">
+          <!--change button to input type =submit-->
+          <input type="submit" id="loginBtn" value="login" name="" class="login_button">
+        </div>
+      </div>
+    </form>
+
+    <div class="tool_box">
+      <div class="left_tool">
+        <a href="forgot_password.html" role="link" class="forgot_password" style="text-decoration:none; color: blue">
+          Forgot password?
+        </a>
+      </div>
+      <div class="right_tool">
+
+        <a class="dot">·</a>
+
+        <a href="register.html" role="link" class="register" style="text-decoration:none;">
+          Register
+        </a>
+      </div>
+    </div>
+  </div>
+  <script src="../script/common.js"></script>
+  <script src="../script/login_reg_script.js"></script>
+  <script>
+    function loginMethod() {
+      $.post(`${baseUrl}/users/login`, {
+        username: $("#username").val(),
+        password: $("#password").val(),
+      }).then(res => {
+        alert(res.message);
+        if (res.code !== 200) return;
+        sessionStorage.setItem("userInfo", JSON.stringify(res.data.user));
+        sessionStorage.setItem("token", res.data.token);
+        location.href = "./index.html";
+      })
+    }
+
+    $(function () {
+      // 注册事件
+      $("#loginBtn").click(e => {
+        e.preventDefault();
+        loginMethod();
+      })
+    })
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>woohoo - Friendzone</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../css/personal.css">
+    <link rel="stylesheet" href="../css/trade.css">
+    <style>
+        .right {
+            width: 100% !important;
+            padding: 0 15px 15px !important;
+        }
+
+        .friendzone_logo_part.icon-item a {
+            background-image: url("../image/friend_add_logo_mouseOn.png") !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="header">
+            <div class="logo_part">
+                <a href="index.html" style="text-decoration:none;-webkit-user-drag:none;">
+                    <img class="logo" src="../image/logo.png" />
+                </a>
+            </div>
+            <div class="filter">
+                <el-input v-model="keywords">
+                    <i class="el-icon-search el-input__icon" slot="suffix" @click="search">
+                    </i>
+                </el-input>
+            </div>
+            <div class="login">
+                <a href="personal.html" v-if="userInfo"
+                    style="text-decoration:none;color:#CC0633;-webkit-user-drag:none;font-weight:bold;">
+                    {{userInfo.nickname}}
+                </a>
+                <a href="login.html" v-else
+                    style="text-decoration:none;color:#CC0633;-webkit-user-drag:none;font-weight:bold;">
+                    Login
+                </a>
+                <span onclick="logout()" style="cursor: pointer;color:cornflowerblue;" v-if="userInfo">logout</span>
+            </div>
+            <div class="trade_logo_part icon-item">
+                <a href="trade.html" style="text-decoration:none;-webkit-user-drag:none;">
+                </a>
+            </div>
+            <div class="studyzone_logo_part icon-item">
+                <a href="studyzone.html" style="text-decoration:none;-webkit-user-drag:none;">
+                </a>
+            </div>
+            <div class="friendzone_logo_part active icon-item">
+                <a href="friendzone.html" style="text-decoration:none;-webkit-user-drag:none;">
+                </a>
+            </div>
+            <div class="homepage_logo_part icon-item">
+                <a href="index.html" style="text-decoration:none;-webkit-user-drag:none;">
+                </a>
+            </div>
+        </div>
+        <section>
+            <div class="container flex">
+                <ul class="right flex column" v-if="postList.length > 0">
+                    <li class="flex item column" v-for="(item, index) in postList" :key="index">
+                        <el-card shadow="always">
+                            <div class="right-title">
+                                {{item.title}}
+                            </div>
+                            <div class="tips">
+                                <span style="margin-right: 10px; color: #67C23A">Popularity values：<i class="el-icon-hot-water"
+                                        style="font-size: 20px;"></i>{{item.popularity}}</span>
+                                <span>Expectations of gender：<i :class="item.sex == 1 ? 'el-icon-male' : 'el-icon-female'"
+                                        :style="{color: item.sex == 1 ? '#409eff' : '#f56c6c'}"></i></el-tag></span>
+                                <span>Expectations of age：<el-tag :type="item.ageStart < 18 ? 'danger' : 'primary'">{{item.ageStart}}
+                                    </el-tag> - <el-tag :type="item.ageEnd > 35 ? 'warning' : 'success'">{{item.ageEnd}}
+                                    </el-tag></span>
+                            </div>
+                            <div class="right-content" v-html="item.content">
+                                {{item.content}}
+                            </div>
+                            <div class="right-imgs" v-if="item.imgs">
+                                <el-row>
+                                    <el-col :span="8" v-for="(v, i) in item.imgs.split(',')" :key="i">
+                                        <div class="right-img-wrapper">
+                                            <div class="wrapper-content">
+                                                <el-image style="width:100%;height: 100%" lazy :fit="'contain'" :src="v"
+                                                    :preview-src-list="item.imgs.split(',')"></el-image>
+                                            </div>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+                            </div>
+                            <div class="right-extra">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    <el-image style="width: 50px; height: 50px; margin-right: 5px"
+                                        :src="item.createUser.logo" fit="fill"></el-image>
+                                    {{item.createUser.nickname}} Post in：{{item.createTime | dateFormat}}
+                                </div>
+                                <el-button type="text" @click="seeThis(item, index)">I want to know him/her</el-button>
+                            </div>
+                        </el-card>
+                    </li>
+                </ul>
+                <ul class="right flex column" v-else>
+                    <li>
+                        <el-card shadow="always">
+                            There is no information post yet!
+                        </el-card>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <el-dialog :title="detailData.createUser && detailData.createUser.nickname + ' Friendzone post'"
+            :visible.sync="isDetailModal" fullscreen>
+            <div class="detail-inner">
+                <el-card shadow="always">
+                    <div class="right-title">
+                        {{detailData.title}}
+                    </div>
+                    <div class="right-content" v-html="detailData.content">
+                        {{detailData.content}}
+                    </div>
+                    <div class="right-imgs" v-if="detailData.imgs">
+                        <el-row>
+                            <el-col :span="8" v-for="(item, index) in detailData.imgs.split(',')" :key="index">
+                                <div class="right-img-wrapper">
+                                    <div class="wrapper-content">
+                                        <el-image style="width:100%;height: 100%" :fit="'contain'" :src="item"
+                                            :preview-src-list="detailData.imgs.split(',')"></el-image>
+                                    </div>
+                                </div>
+                            </el-col>
+                        </el-row>
+                    </div>
+                    <div class="right-extra">
+                        <div style="display: flex; justify-content: flex-start; align-items: center;">
+                            <el-image style="width: 50px; height: 50px; margin-right: 5px"
+                                :src="detailData.createUser && detailData.createUser.logo" fit="fill">
+                            </el-image>
+                            {{detailData.createUser && detailData.createUser.nickname}} Post in：{{detailData.createTime |
+                            dateFormat}}
+                        </div>
+                    </div>
+                </el-card>
+                <el-divider content-position="center">Comments Section</el-divider>
+                <ul class="comments">
+                    <el-card class="box-card comment-card level-first" v-for="(item, index) in commentsList"
+                        :key="index">
+                        <el-tooltip placement="top">
+                            <div slot="content">
+                                <el-button size="mini" type="primary" @click="callback(item, index)">Reply</el-button>
+                                <el-button size="mini"
+                                    v-if="userInfo && item.fromUser._id == userInfo._id || userInfo && detailData.createUser._id == userInfo._id"
+                                    type="danger" @click="deleteComment(item, index)">Delete</el-button>
+                            </div>
+                            <p class="comment-inner">
+                                <span class="user">
+                                    <el-image style="width: 20px; height: 20px; margin-right: 5px"
+                                        :src="item.fromUser.logo" fit="fill">
+                                    </el-image>{{item.fromName}}
+                                </span>
+                                <span>{{item.message}}</span>
+                                <i class="comment-time">{{item.createTime | dateFormat}}</i>
+                            </p>
+                        </el-tooltip>
+                        <el-card class="box-card comment-card level-second" v-for="(v, i) in item.children" :key="i">
+                            <el-tooltip placement="top">
+                                <div slot="content">
+                                    <el-button size="mini" type="primary" @click="callback(v, index)">Reply</el-button>
+                                    <el-button size="mini"
+                                        v-if="userInfo && v.fromUser._id == userInfo._id || userInfo && detailData.createUser._id == userInfo._id"
+                                        type="danger" @click="deleteComment(v, index, i)">Delete</el-button>
+                                </div>
+                                <p class="comment-inner">
+                                    <span class="user">
+                                        <el-image style="width: 20px; height: 20px; margin-right: 5px"
+                                            :src="v.fromUser.logo" fit="fill">
+                                        </el-image>{{v.fromName}}
+                                    </span> to <span class="user">
+                                        <el-image style="width: 20px; height: 20px; margin-right: 5px"
+                                            :src="v.toUser.logo" fit="fill">
+                                        </el-image>{{v.toName}}
+                                    </span><span>{{v.message}}</span>
+                                    <i class="comment-time">{{item.createTime | dateFormat}}</i>
+                                </p>
+                            </el-tooltip>
+                        </el-card>
+                    </el-card>
+                </ul>
+            </div>
+            <div class="operation operation-for-dialog">
+                <div class="comment-area">
+                    <el-input type="textarea" ref="commentArea" style="width: 100%; height: 100%"
+                        :placeholder="commentPlaceholder" v-model="params.message">
+                    </el-input>
+                    <el-button @click="leaveComment" size="small" type="primary">leave a message</el-button>
+                </div>
+                <div>
+                    <span class="tips" v-if="detailData.isPublish == 1">User has authorized the public email</span>
+                    <el-button v-if="!detailData.wechat" @click="getWechat" size="small" type="primary">
+                        Access to email
+                    </el-button>
+                    <el-button v-if="detailData.wechat" @click="getWechat" size="small" type="primary" plain>
+                        {{detailData.wechat}}</el-button>
+                    <el-button type="text" icon="el-icon-hot-water">Popularity values: {{detailData.popularity}}
+                    </el-button>
+                    <el-button type="text">Expectations of gender：<i :class="detailData.sex == 1 ? 'el-icon-male' : 'el-icon-female'"
+                            :style="{color: detailData.sex == 1 ? '#409eff' : '#f56c6c'}"></i></el-tag>
+                    </el-button>
+                    <el-button type="text">Expectations of age：<el-tag :type="detailData.ageStart < 18 ? 'danger' : 'primary'">
+                            {{detailData.ageStart}}
+                        </el-tag> - <el-tag :type="detailData.ageEnd > 35 ? 'warning' : 'success'">{{detailData.ageEnd}}
+                        </el-tag>
+                    </el-button>
+                </div>
+                <div>
+                    <el-button @click="isDetailModal = false" size="small" type="primary">Close</el-button>
+                </div>
+            </div>
+        </el-dialog>
+    </div>
+    <!-- 引入组件库 -->
+    <script src="../script/jquery.min.js"></script>
+    <script src="../script/moment.js"></script>
+    <script src="../script/common.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        const app = new Vue({
+            el: "#app",
+            data: {
+                userInfo: userInfo,
+                keywords: "",
+                postList: [],
+                isDetailModal: false,
+                detailData: {},
+                activeIndex: 0,
+                commentPlaceholder: "Leave your thoughts",
+                params: {
+                    articleId: "",
+                    fromUser: userInfo && userInfo._id,
+                    fromName: userInfo && userInfo.nickname,
+                    commentId: "",
+                    toUser: "",
+                    toName: "",
+                    message: "",
+                    type: 1
+                },
+                commentsList: []
+            },
+            computed: {
+
+            },
+            filters: {
+                dateFormat(date) {
+                    return moment(date).calendar();
+                }
+            },
+            created() {
+                this.$confirm("<p style='color:#f56c6c'>I promise: I know that online dating needs to be cautious, and I will strictly abide by the laws and regulations.</p><p>In case of moral and legal problems, the technical team will not be responsible for any responsibility, all the responsibility shall be borne by myself.</p><p>Click on the below <span style='color:#f56c6c'>I agree</span> Button will be deemed to comply with this agreement</p>", "agreement", {
+                    type: "warning",
+                    confirmButtonText: "I agree",
+                    cancelButtonText: "I disagree ",
+                    showClose: false,
+                    dangerouslyUseHTMLString: true
+                }).then(() => {
+                    this.search();
+                }).catch(() => {
+                    window.location.href = "./index.html"
+                })
+            },
+            methods: {
+                search() {
+                    $.get(baseUrl + "/friends/list", {
+                        keywords: this.keywords
+                    }).then(res => {
+                        this.postList = res.data || [];
+                    })
+                },
+                getCommentList(id, index) {
+                    $.get(baseUrl + "/comments/list", {
+                        id,
+                        type: 1
+                    }).then(res => {
+                        this.params.articleId = this.detailData._id;
+                        this.commentsList = res.data;
+                        index ? this.activeIndex = index : "";
+                    })
+                },
+                seeThis(data, index) {
+                    this.isDetailModal = true;
+                    this.detailData = data;
+                    this.getCommentList(data._id, index)
+                    this.updatePopularity();
+                },
+                updatePopularity() {
+                    $.post(baseUrl + "/friends/updatePopularity", {
+                        id: this.detailData._id
+                    }).then(res => {
+                        if (res.code != 200) return;
+                        this.detailData.popularity += 1;
+                        this.postList[this.activeIndex].popularity = this.detailData.popularity
+                    })
+                },
+                checkUser() {
+                    if (!this.userInfo) {
+                        this.$message.warning("You haven't logged in yet, so please come back and comment")
+                        return false
+                    }
+                    return true;
+                },
+                callback(item, index) {
+                    if (!this.checkUser()) return;
+                    this.params.commentId = item.commentId || item._id;
+                    this.params.toUser = item.fromUser._id;
+                    this.params.toName = item.fromName;
+                    this.$nextTick(() => {
+                        console.log(this.params)
+                    })
+                    this.$refs.commentArea.focus();
+                    this.commentPlaceholder = "@" + item.fromName + ": "
+                },
+                leaveComment() {
+                    $.post(baseUrl + "/comments/add", {
+                        ...this.params
+                    }).then(res => {
+                        if (res.code != 200) return this.$message.error(res.message);
+                        this.commentPlaceholder = "Leave your thoughts";
+                        this.params.toName = ""
+                        this.params.toUser = ""
+                        this.params.commentId = ""
+                        this.params.message = ""
+                        this.getCommentList(this.detailData._id);
+                    })
+                },
+                getWechat() {
+                    $.get(baseUrl + "/friends/getWechat", {
+                        id: this.detailData._id
+                    }).then(res => {
+                        // this.detailData.wechat = res.data;
+                        // this.postList[this.activeIndex].wechat = res.data;
+                        this.$set(this.detailData, "wechat", res.data);
+                        this.$set(this.postList[this.activeIndex], "wechat", res.data);
+                    })
+                },
+                deleteComment(item, indexLevel1, indexLevel2) {
+                    $.post(baseUrl + "/comments/delete", {
+                        id: item._id,
+                        fromUser: item.fromUser._id,
+                        toUser: item.toUser._id
+                    }).then(res => {
+                        if (res.code != 200) {
+                            return this.$message.error(res.message);
+                        }
+                        this.$message.success(res.message);
+                        if (typeof indexLevel2 == 'number' && indexLevel2 >= 0) {
+                            this.commentsList[indexLevel1].children.splice(indexLevel2, 1);
+                        } else {
+                            this.commentsList.splice(indexLevel1, 1);
+                        }
+                    })
+                }
+            },
+            mounted() { },
+        })
+    </script>
+</body>
+
+</html>

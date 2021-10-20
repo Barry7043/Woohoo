@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>woohoo - Personal Center</title>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <link rel="stylesheet" href="../css/personal.css">
+  <link rel="stylesheet" href="../css/trade.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="header">
+      <div class="logo_part">
+        <a href="index.html" style="text-decoration:none;-webkit-user-drag:none;">
+          <img class="logo" src="../image/logo.png" />
+        </a>
+      </div>
+      <div class="filter">
+        <el-input v-model="keywords">
+          <i class="el-icon-search el-input__icon" slot="suffix" @click="search">
+          </i>
+        </el-input>
+      </div>
+      <div class="login">
+        <a href="personal.html" v-if="userInfo"
+          style="text-decoration:none;color:#CC0633;-webkit-user-drag:none;font-weight:bold;">
+          {{userInfo && userInfo.nickname}}
+        </a>
+        <a href="login.html" v-else style="text-decoration:none;color:#CC0633;-webkit-user-drag:none;font-weight:bold;">
+          Login
+        </a>
+        <span onclick="logout()" style="cursor: pointer; color: cornflowerblue" v-if="userInfo">Logout</span>
+      </div>
+      <div class="trade_logo_part icon-item">
+        <a href="trade.html" style="text-decoration:none;-webkit-user-drag:none;">
+        </a>
+      </div>
+      <div class="studyzone_logo_part icon-item">
+        <a href="studyzone.html" style="text-decoration:none;-webkit-user-drag:none;">
+        </a>
+      </div>
+      <div class="friendzone_logo_part icon-item">
+        <a href="friendzone.html" style="text-decoration:none;-webkit-user-drag:none;">
+        </a>
+      </div>
+      <div class="homepage_logo_part icon-item">
+        <a href="index.html" style="text-decoration:none;-webkit-user-drag:none;">
+        </a>
+      </div>
+    </div>
+    <section>
+      <div class="container flex">
+        <ul class="left flex column">
+          <li :class="typeNow == item.type ? 'active' : ''" v-for="(item, index) in navList" :key="index"
+            @click="toggleType(item.type)">{{item.name}}</li>
+        </ul>
+        <ul class="right flex column" v-if="postList.length > 0">
+          <li class="flex item column" v-for="(item, index) in postList" :key="index">
+            <el-card shadow="always">
+              <div class="right-title">
+                <el-checkbox v-model="item.checked"></el-checkbox> {{item.title}}
+              </div>
+              <div class="right-content" v-html="item.content"></div>
+              <div class="right-imgs" v-if="item.imgs">
+                <el-row>
+                  <el-col :span="8" v-for="(v, i) in item.imgs.split(',')" :key="i">
+                    <div class="right-img-wrapper">
+                      <div class="wrapper-content"><img :src="v" alt=""></div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+              <div class="right-extra">
+                Post in：{{item.createTime | dateFormat}}
+                <div>
+                  <el-button type="text" v-if="typeNow != 2" @click="seeThis(item, index)">View details</el-button>
+                  <el-button type="text" style="color: #CC0633; float: right;" @click="deleteOne(item._id, index)">Delete
+                  </el-button>
+                </div>
+              </div>
+            </el-card>
+          </li>
+        </ul>
+        <ul class="right flex column" v-else>
+          <li>
+            <el-card shadow="always">
+              This is no information post yet!
+            </el-card>
+          </li>
+        </ul>
+        <div class="delete-group">
+          <el-dropdown trigger="click" @command="editTrigger" placement="top">
+            <span class="el-dropdown-link">
+              <el-button type="warning" circle icon="el-icon-edit"></el-button>
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item icon="el-icon-lock" command="changePassword">Change password</el-dropdown-item>
+              <el-dropdown-item icon="el-icon-document" command="changeBasicInfo">Modify personal information</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+          <el-button type="primary" circle icon="el-icon-plus" @click="toPost"></el-button>
+          <el-button type="danger" circle icon="el-icon-delete" @click="deleteGroup"></el-button>
+        </div>
+      </div>
+    </section>
+    <el-dialog :title="'My Trading post'" :visible.sync="isDetailModal" fullscreen>
+      <div class="detail-inner">
+        <el-card shadow="always">
+          <div class="right-title">
+            {{detailData.title}}
+          </div>
+          <div class="right-content" v-html="detailData.content">
+            {{detailData.content}}
+          </div>
+          <div class="right-imgs" v-if="detailData.imgs">
+            <el-row>
+              <el-col :span="8" v-for="(item, index) in detailData.imgs.split(',')" :key="index">
+                <div class="right-img-wrapper">
+                  <div class="wrapper-content">
+                    <el-image style="width:100%;height: 100%" :fit="'contain'" :src="item"
+                      :preview-src-list="detailData.imgs.split(',')"></el-image>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="right-extra">
+            {{detailData.createUser && detailData.createUser.nickname}} Post in：{{detailData.createTime |
+            dateFormat}}
+          </div>
+        </el-card>
+        <el-divider content-position="center">Comments Section</el-divider>
+        <ul class="comments">
+          <el-card class="box-card comment-card level-first" v-for="(item, index) in commentsList" :key="index">
+            <el-tooltip placement="top">
+              <div slot="content">
+                <el-button size="mini" type="primary" @click="callback(item, index)">Reply</el-button>
+                <el-button size="mini"
+                  v-if="userInfo && item.fromUser._id == userInfo._id || userInfo && detailData.createUser._id == userInfo._id"
+                  type="danger" @click="deleteComment(item, index)">Delete</el-button>
+              </div>
+              <p class="comment-inner">
+                <span class="user">{{item.fromName}}</span>
+                <span>{{item.message}}</span>
+                <i class="comment-time">{{item.createTime | dateFormat}}</i>
+              </p>
+            </el-tooltip>
+            <el-card class="box-card comment-card level-second" v-for="(v, i) in item.children" :key="i">
+              <el-tooltip placement="top">
+                <div slot="content">
+                  <el-button size="mini" type="primary" @click="callback(v, index)">Reply</el-button>
+                  <el-button size="mini"
+                    v-if="userInfo && v.fromUser._id == userInfo._id || userInfo && detailData.createUser._id == userInfo._id"
+                    type="danger" @click="deleteComment(v, index, i)">Delete</el-button>
+                </div>
+                <p class="comment-inner">
+                  <span class="user">{{v.fromName}}</span> to <span
+                    class="user">{{v.toName}}</span><span>{{v.message}}</span>
+                  <i class="comment-time">{{item.createTime | dateFormat}}</i>
+                </p>
+              </el-tooltip>
+            </el-card>
+          </el-card>
+        </ul>
+      </div>
+      <div class="operation operation-for-dialog" v-if="typeNow == 3">
+        <div>
+          <span class="price">￥{{detailData.price}}</span>
+        </div>
+        <div>
+          <span class="tips" v-if="detailData.isPublish == 1">You have authorized the public Email</span>
+          <el-button @click="isDetailModal = false">Close</el-button>
+          <el-button v-if="detailData.isPublish == 1 && detailData.wechat" type="primary" plain>
+            {{detailData.wechat}}</el-button>
+          <el-button type="success" icon="el-icon-star-on">
+            {{detailData.wantNum}}
+          </el-button>
+        </div>
+      </div>
+      <div class="operation operation-for-dialog" v-else>
+        <div>
+          <span class="tips">You have set Email</span>
+          <el-button v-if="detailData.wechat" size="small" type="text" plain>
+            {{detailData.wechat}}</el-button>
+          <el-button type="text" icon="el-icon-hot-water">Popularity values: {{detailData.popularity}}
+          </el-button>
+          <el-button type="text">Expect Gender：{{!detailData.sex ? 'Unlimited' : ''}}<i
+              :class="detailData.sex == 1 ? 'el-icon-male' : detailData.sex == 2 ? 'el-icon-female' : ''"
+              :style="{color: detailData.sex == 1 ? '#409eff' : detailData.sex == 2 ? '#f56c6c' : '#409eff'}"></i>
+            </el-tag>
+          </el-button>
+          <el-button type="text">Expact Ages：<el-tag :type="detailData.ageStart < 18 ? 'danger' : 'primary'">
+              {{detailData.ageStart}}
+            </el-tag> - <el-tag :type="detailData.ageEnd > 35 ? 'warning' : 'success'">{{detailData.ageEnd}}
+            </el-tag>
+          </el-button>
+        </div>
+        <div>
+          <el-button @click="isDetailModal = false" size="small" type="primary">Close</el-button>
+        </div>
+      </div>
+    </el-dialog>
+    <el-dialog title="Change password" :visible.sync="isChangePasswordModal" width="45%">
+      <el-form modal="changePasswordForm" ref="changePasswordForm">
+        <el-form-item label="New password" prop="password">
+          <el-input type="password" v-model="changePasswordForm.password"></el-input>
+        </el-form-item>
+        <el-form-item label="Confirm password" prop="confirmPassword">
+          <el-input type="password" v-model="changePasswordForm.confirmPassword"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button size="small" @click="resetChangePassword">Reset</el-button>
+          <el-button type="primary" size="small" @click="confirmChangePassword">Confirm</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+    <el-dialog title="Modify basic information" :visible.sync="isBasicInfoModal" width="45%">
+      <el-form modal="basicInfoForm" ref="basicInfoForm">
+        <el-form-item label="Username" prop="nickname">
+          <el-input type="text" v-model="basicInfoForm.nickname"></el-input>
+        </el-form-item>
+        <el-form-item label="Phone" prop="nickname">
+          <el-input type="text" v-model="basicInfoForm.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="Profile photo" prop="logo">
+          <el-upload class="avatar-uploader" :show-file-list="false" ref="upload"
+            :action="baseUrl + '/upload/uploadFile'" :data="{type: 'logo'}" :limit="1" accept=".png,.jpg,.jpeg,.webp"
+            :on-success="uploadSuccess">
+            <img v-if="basicInfoForm.logo" :src="basicInfoForm.logo" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="small" @click="confirmChangeBasicInfo">Confirm</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+  <!-- 引入组件库 -->
+  <script src="../script/jquery.min.js"></script>
+  <script src="../script/moment.js"></script>
+  <script src="../script/common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script>
+    if (!userInfo) { location.href = "./login.html" }
+    const app = new Vue({
+      el: "#app",
+      data: {
+        baseUrl,
+        userInfo: userInfo,
+        typeNow: 1,
+        keywords: "",
+        navList: [
+          {
+            name: "My Friendzone Post",
+            type: 1,
+          },
+          {
+            name: "My Studyzone Post",
+            type: 2,
+          },
+          {
+            name: "My Tradezone Post",
+            type: 3,
+          },
+        ],
+        postList: [],
+        isDetailModal: false,
+        detailData: {},
+        activeIndex: 0,
+        commentPlaceholder: "Leave your thoughts",
+        params: {
+          articleId: "",
+          fromUser: userInfo && userInfo._id,
+          fromName: userInfo && userInfo.nickname,
+          commentId: "",
+          toUser: "",
+          toName: "",
+          message: "",
+          type: 3
+        },
+        commentsList: [],
+        isChangePasswordModal: false,
+        changePasswordForm: {
+          password: "",
+          confirmPassword: ""
+        },
+        isBasicInfoModal: false,
+        basicInfoForm: {
+          nickname: userInfo.nickname,
+          logo: userInfo.logo,
+          phone: userInfo.phone
+        }
+      },
+      computed: {
+
+      },
+      created() {
+        this.search();
+      },
+      filters: {
+        dateFormat(date) {
+          return moment(date).calendar();
+        }
+      },
+      methods: {
+        toggleType(type) {
+          this.typeNow = this.typeNow == type ? this.typeNow : type;
+          this.search(type);
+        },
+        search() {
+          var url = "";
+          if (this.typeNow == 1 || !this.typeNow) { url = "/friends/listOfMine" }
+          else if (this.typeNow == 2) { url = "/posts/listOfMine" }
+          else if (this.typeNow == 3) { url = "/products/listOfMine" }
+          $.get(baseUrl + url, {
+            keywords: this.keywords,
+          }).then(res => {
+            var data = res.data || []
+            data.map(v => {
+              v.checked = false;
+            })
+            this.postList = res.data;
+          })
+        },
+        deleteGroup() {
+          var url = ""
+          if (this.typeNow == 1 || !this.typeNow) { url = "/friends/deleteGroup" }
+          else if (this.typeNow == 2) { url = "/posts/deleteGroup" }
+          else if (this.typeNow == 3) { url = "/products/deleteGroup" }
+          this.$confirm("Leave your thoughts Are you sure you want to delete the selected post?", "Warm prompt", {
+            type: "warning"
+          }).then(() => {
+            var ids = this.postList.reduce((p, n) => p = n.checked ? p.concat(n._id) : p, []);
+            $.ajax({
+              type: "POST",
+              headers: {
+                "Content-Type": "application/json;charset=utf-8"
+              },
+              url: baseUrl + url,
+              data: JSON.stringify({
+                ids
+              })
+            }).then(res => {
+              if (res.code !== 200) { return this.$message.error(res.message) };
+              this.postList = this.postList.filter(v => !v.checked);
+              this.$message.success(res.message);
+            })
+          }).catch(() => { })
+        },
+        toPost() {
+          location.href = "./post-form.html"
+        },
+        deleteOne(id, index) {
+          var url = ""
+          if (this.typeNow == 1 || !this.typeNow) { url = "/friends/delete" }
+          else if (this.typeNow == 2) { url = "/posts/delete" }
+          else if (this.typeNow == 3) { url = "/products/delete" }
+          this.$confirm("Leave your thoughts Are you sure you want to delete the selected post?", "Warm prompt", {
+            type: "warning"
+          }).then(() => {
+            $.ajax({
+              type: "POST",
+              headers: {
+                "Content-Type": "application/json;charset=utf-8"
+              },
+              url: baseUrl + url,
+              data: JSON.stringify({
+                id
+              })
+            }).then(res => {
+              if (res.code !== 200) { return this.$message.error(res.message) };
+              this.postList.splice(index, 1);
+              this.$message.success(res.message);
+            })
+          }).catch(() => { })
+        },
+        getCommentList(id, index) {
+          $.get(baseUrl + "/comments/list", {
+            id,
+            type: this.typeNow
+          }).then(res => {
+            this.params.articleId = this.detailData._id;
+            this.commentsList = res.data;
+            index ? this.activeIndex = index : "";
+          })
+        },
+        seeThis(data, index) {
+          this.isDetailModal = true;
+          this.detailData = data;
+          this.getCommentList(data._id, index)
+        },
+        editTrigger(command) {
+          if (command == "changePassword") this.isChangePasswordModal = true
+          if (command == "changeBasicInfo") this.isBasicInfoModal = true;
+        },
+        confirmChangePassword() {
+          $.post(baseUrl + "/users/changePassword", {
+            ...this.changePasswordForm
+          }).then(res => {
+            if (res.code != 200) return this.$message.error(res.message);
+            this.$message.success(res.message);
+            this.isChangePasswordModal = false;
+          })
+        },
+        resetChangePassword() {
+          this.$refs.changePasswordForm.resetFields()
+        },
+        confirmChangeBasicInfo() {
+          $.post(baseUrl + "/users/editInfo", {
+            ...this.basicInfoForm
+          }).then(res => {
+            if (res.code != 200) return this.$message.error(res.message);
+            this.$message.success(res.message);
+            this.isBasicInfoModal = false;
+            this.userInfo = res.data;
+            sessionStorage.setItem("userInfo", JSON.stringify(this.userInfo));
+          })
+        },
+        uploadSuccess(res, file) {
+          this.basicInfoForm.logo = res.data;
+        },
+        deleteComment(item, indexLevel1, indexLevel2) {
+          $.post(baseUrl + "/comments/delete", {
+            id: item._id,
+            fromUser: item.fromUser._id,
+            toUser: item.toUser._id
+          }).then(res => {
+            if (res.code != 200) {
+              return this.$message.error(res.message);
+            }
+            this.$message.success(res.message);
+            if (typeof indexLevel2 == 'number' && indexLevel2 >= 0) {
+              this.commentsList[indexLevel1].children.splice(indexLevel2, 1);
+            } else {
+              this.commentsList.splice(indexLevel1, 1);
+            }
+          })
+        }
+      },
+      mounted() { },
+    })
+  </script>
+</body>
+
+</html>

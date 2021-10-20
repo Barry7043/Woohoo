@@ -1,0 +1,9 @@
+It took us some time to get familiar with HTML and work with it.
+CSS was big trouble. All we could do is working while learning.
+A lot of discussions were done to come out with a satisfying home page.
+We are still working on that. Problems frequently occurred at the back-end.
+The original plan is to use MySQL, but Oracle only offers a 30-day trial.
+We then turned to use MongoDB. But we could not launch MongoDB after an improper closure.
+We figured it out by inputting killall command in the terminal and redistribute the path.
+A great improvement done is that we solved duplicated username by simply assign unique: true.
+thus, the same username would not be created a second time.

@@ -1,0 +1,183 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  ul {
+    list-style: none;
+  } 
+
+  .header {
+    height: 80px;
+    box-shadow: 0 0 5px #ccc;
+    transition: 0.3s;
+  }
+  .header:hover {
+      box-shadow: 0 0px 10px #ccc;
+  }
+
+  .logo_part {
+    height: 70px;
+    width: 150px;
+    margin-top: 0px;
+    margin-left: 70px;
+    margin-right: AUTO;
+    padding-top: 10px;
+    float: left;
+  }
+
+  .logo {
+    margin-left: AUTO;
+    margin-right: AUTO;
+    height: 70px;
+    -webkit-user-drag: none;
+  }
+
+  .trade_logo_part {
+    padding-top: 25px;
+    float: right;
+    height: 35px;
+    text-align: center;
+    margin-right: 5%;
+  }
+
+  .trade_logo {
+    margin-left: AUTO;
+    margin-right: AUTO;
+    height: 30px;
+    -webkit-user-drag: none;
+  }
+
+  .studyzone_logo_part {
+    padding-top: 25px;
+    float: right;
+    height: 35px;
+    text-align: center;
+    margin-right: 2%;
+  }
+
+  .studyzone_logo {
+    margin-left: AUTO;
+    margin-right: AUTO;
+    height: 30px;
+    -webkit-user-drag: none;
+  }
+
+  .friendzone_logo_part {
+    padding-top: 25px;
+    float: right;
+    height: 35px;
+    text-align: center;
+    margin-right: 2%;
+  }
+
+  .friendzone_logo {
+    margin-left: AUTO;
+    margin-right: AUTO;
+    height: 30px;
+    -webkit-user-drag: none;
+  }
+
+  .homepage_logo_part {
+    padding-top: 25px;
+    float: right;
+    height: 35px;
+    text-align: center;
+    margin-right: 2%;
+  }
+
+  .homepage_logo {
+    margin-left: AUTO;
+    margin-right: AUTO;
+    height: 30px;
+    -webkit-user-drag: none;
+  }
+
+  .login {
+    padding-top: 5px;
+    float: right;
+    /* margin-left: 100px; */
+    margin-right: 5%;
+    height: 70px;
+    text-align: center;
+    line-height: 70px;
+  }
+
+    .header  .icon-item  a{
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        display: inline-block;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: contain;
+    }
+    .header  .icon-item.trade_logo_part a{
+        background-image: url(../image/trade_logo.png);
+    }
+    .header  .icon-item.studyzone_logo_part a{
+        background-image: url(../image/study_zone_logo.png);
+    }
+    .header  .icon-item.friendzone_logo_part a{
+        background-image: url(../image/friend_add_logo.png);
+    }
+    .header  .icon-item.homepage_logo_part a{
+        background-image: url(../image/homepage_logo.png);
+    }
+    .header  .icon-item.trade_logo_part:hover a{
+        background-image: url(../image/trade_logo_mouseOn.png);
+    }
+    .header  .icon-item.studyzone_logo_part:hover a{
+        background-image: url(../image/study_zone_logo_mouseOn.png);
+    }
+    .header  .icon-item.friendzone_logo_part:hover a{
+        background-image: url(../image/friend_add_logo_mouseOn.png);
+    }
+    .header  .icon-item.homepage_logo_part:hover a{
+        background-image: url(../image/homepage_logo_mouseOn.png);
+    }
+
+  header,
+  section {
+    width: 100%;
+  }
+
+  .container {
+    width: 800px;
+    max-width: 100%;
+    margin: 20px auto 0;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  header .top>div {
+    width: 100%;
+  }
+
+  .column {
+    flex-direction: column;
+  }
+
+  .flex-center {
+    align-items: center;
+    justify-content: center;
+
+  }
+
+  .flex-around {
+    justify-content: space-around;
+  }
+
+  [type=search] {
+    width: 50%;
+  }
+
+  .hover:hover {
+    transform: scale(1.5, 1.4);
+  }
